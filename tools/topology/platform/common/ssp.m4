@@ -27,6 +27,20 @@ define(`SSP_CONFIG',
 $6
 )
 
+define(`MULTI_SSP_CONFIG',
+`SectionHWConfig."'$1`" {'
+`'
+`	id		"'$2`"'
+`'
+`	format		"'$3`"'
+`	'$4
+`	'$5
+`	'$6
+`	'$7
+`}'
+$8
+)
+
 dnl SSP_QUIRK_LBM 64 = (1 << 6)
 define(`SSP_QUIRK_LBM', 64)
 
@@ -46,6 +60,28 @@ define(`SSP_CONFIG_DATA',
 `}'
 `SectionData."'N_DAI_CONFIG($1$2)`_data" {'
 `	tuples "'N_DAI_CONFIG($1$2)`_tuples"'
+`}'
+)
+
+define(`SSP_MULTI_CONFIG_DATA',
+`SectionVendorTuples."'$1`_tuples" {'
+`	tokens "sof_ssp_tokens"'
+`	tuples."word" {'
+`		SOF_TKN_INTEL_SSP_SAMPLE_BITS'	STR($2)
+`		SOF_TKN_INTEL_SSP_QUIRKS'	ifelse(defn(`$4'), `', "0", STR($4))
+`		SOF_TKN_INTEL_SSP_BCLK_DELAY'	ifelse(defn(`$5'), `', "0", STR($5))
+`		SOF_TKN_INTEL_SSP_CLKS_CONTROL' ifelse(defn(`$6'), `', "0", STR($6))
+`	}'
+`	tuples."short" {'
+`		SOF_TKN_INTEL_SSP_MCLK_ID'	ifelse(defn(`$3'), `', "0", STR($3))
+`		SOF_TKN_INTEL_SSP_FRAME_PULSE_WIDTH' ifelse(defn(`$7'), `', "0", STR($7))
+`	}'
+`	tuples."bool" {'
+`		SOF_TKN_INTEL_SSP_TDM_PADDING_PER_SLOT' ifelse(defn(`$8'), `', "false", STR($8))
+`	}'
+`}'
+`SectionData."'$1`" {'
+`	tuples "'$1`_tuples"'
 `}'
 )
 
