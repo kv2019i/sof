@@ -130,6 +130,18 @@ PIPELINE_PCM_ADD(sof/pipe-volume-playback.m4,
 	1000, 0, 0,
 	48000, 48000, 48000)
 
+# BT offload playback
+PIPELINE_PCM_ADD(sof/pipe-passthrough-playback.m4,
+	eval(SMART_REF_PPL_ID + 1), 50, 2, s16le,
+	1000, 0, 0,
+	8000, 48000, 48000)
+
+# BT offload capture
+PIPELINE_PCM_ADD(sof/pipe-passthrough-capture.m4,
+	eval(SMART_REF_PPL_ID + 2), 50, 2, s16le,
+	1000, 0, 0,
+	8000, 48000, 48000)
+
 #
 # DAIs configuration
 #
@@ -181,6 +193,20 @@ DAI_ADD(sof/pipe-dai-playback.m4,
 	PIPELINE_SOURCE_8, 2, s32le,
 	1000, 0, 0, SCHEDULE_TIME_DOMAIN_TIMER)
 
+# playback DAI is SSP2 using 2 periods
+# Buffers use s16le format, with 48 frame per 1000us on core 0 with priority 0
+DAI_ADD(sof/pipe-dai-playback.m4,
+	eval(SMART_REF_PPL_ID + 1), SSP, 2, SSP2-Codec,
+	PIPELINE_SOURCE_12, 2, s16le,
+	1000, 0, 0, SCHEDULE_TIME_DOMAIN_TIMER)
+
+# capture DAI is SSP2 using 2 periods
+# Buffers use s16le format, with 48 frame per 1000us on core 0 with priority 0
+DAI_ADD(sof/pipe-dai-capture.m4,
+	eval(SMART_REF_PPL_ID + 2), SSP, 2, SSP2-Codec,
+	PIPELINE_SINK_13, 2, s16le,
+	1000, 0, 0, SCHEDULE_TIME_DOMAIN_TIMER)
+
 #
 # Bind PCM with the pipeline
 #
@@ -190,6 +216,7 @@ PCM_PLAYBACK_ADD(HDMI1, 2, PIPELINE_PCM_5)
 PCM_PLAYBACK_ADD(HDMI2, 3, PIPELINE_PCM_6)
 PCM_PLAYBACK_ADD(HDMI3, 4, PIPELINE_PCM_7)
 PCM_PLAYBACK_ADD(HDMI4, 5, PIPELINE_PCM_8)
+PCM_DUPLEX_ADD(BTSCO8kHz, 50, PIPELINE_PCM_12, PIPELINE_PCM_13)
 
 #
 # BE configurations - overrides config in ACPI if present
@@ -208,6 +235,14 @@ DAI_CONFIG(SSP, 0, 0, SSP0-Codec,
                       SSP_CLOCK(fsync, 48000, codec_slave),
                       SSP_TDM(2, 25, 3, 3),
                       SSP_CONFIG_DATA(SSP, 0, 24)))
+
+# BT offload on SSP2
+DAI_CONFIG(SSP, 2,  eval(SMART_BE_ID + 1), SSP2-Codec,
+          SSP_CONFIG(DSP_A, SSP_CLOCK(mclk, 38400000, codec_mclk_in),
+                     SSP_CLOCK(bclk, 1536000, codec_slave),
+                     SSP_CLOCK(fsync, 48000, codec_slave),
+                     SSP_TDM(2, 16, 3, 0),
+                     SSP_CONFIG_DATA(SSP, 2, 16, 0, 0)))
 
 # 4 HDMI/DP outputs (ID: 3,4,5,6)
 DAI_CONFIG(HDA, 0, 3, iDisp1,
