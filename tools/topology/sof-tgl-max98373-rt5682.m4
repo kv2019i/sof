@@ -85,8 +85,11 @@ define(DMIC_PIPELINE_KWD_ID, `10')
 define(DMIC_DAI_LINK_16k_ID, `2')
 # define pcm, pipeline and dai id
 define(KWD_PIPE_SCH_DEADLINE_US, 20000)
-# include the generic dmic with kwd
-include(`platform/intel/intel-generic-dmic-kwd.m4')
+# include the generic dmic
+# if XPROC is not defined, define with default pipe
+ifdef(`DMICPROC', , `define(DMICPROC, eq-iir-volume)')
+ifdef(`DMIC16KPROC', , `define(DMIC16KPROC, eq-iir-volume)')
+include(`platform/intel/intel-generic-dmic.m4')
 
 dnl PIPELINE_PCM_ADD(pipeline,
 dnl     pipe id, pcm, max channels, format,
