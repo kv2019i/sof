@@ -70,14 +70,14 @@ PIPELINE_PCM_ADD(sof/pipe-volume-capture.m4,
 PIPELINE_PCM_ADD(sof/pipe-volume-playback.m4,
 	5, 2, 2, s16le,
 	1000, 0, 0,
-	48000, 48000, 48000)
+	8000, 8000, 8000)
 
 # Low Latency capture pipeline 6 on PCM 2 using max 2 channels of s16le.
 # Schedule 48 frames per 1000us deadline on core 0 with priority 0
 PIPELINE_PCM_ADD(sof/pipe-volume-capture.m4,
 	6, 2, 2, s16le,
 	1000, 0, 0,
-	48000, 48000, 48000)
+	8000, 8000, 8000)
 
 # Passthrough capture pipeline 13 on PCM 6 using max 2 channels.
 # 1000us deadline on core 0 with priority 0
@@ -168,11 +168,11 @@ DAI_CONFIG(SSP, 1, 1, NoCodec-1,
 		      SSP_CONFIG_DATA(SSP, 1, 24, 0, SSP_QUIRK_LBM)))
 
 DAI_CONFIG(SSP, 2, 2, NoCodec-2,
-	   SSP_CONFIG(I2S, SSP_CLOCK(mclk, 38400000, codec_mclk_in),
-		      SSP_CLOCK(bclk, 2400000, codec_slave),
-		      SSP_CLOCK(fsync, 48000, codec_slave),
-		      SSP_TDM(2, 25, 3, 3),
-		      SSP_CONFIG_DATA(SSP, 2, 24, 0, SSP_QUIRK_LBM)))
+	   SSP_CONFIG(DSP_A, SSP_CLOCK(mclk, 19200000, codec_mclk_in),
+		      SSP_CLOCK(bclk, 128000, codec_slave),
+		      SSP_CLOCK(fsync, 8000, codec_slave),
+		      SSP_TDM(1, 16, 3, 3),
+		      SSP_CONFIG_DATA(SSP, 2, 16, 0, 15)))
 
 DAI_CONFIG(DMIC, 0, 6, NoCodec-6,
 	   dnl DMIC_CONFIG(driver_version, clk_min, clk_mac, duty_min, duty_max,
