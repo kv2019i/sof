@@ -237,12 +237,28 @@ DAI_CONFIG(SSP, 0, 0, SSP0-Codec,
                       SSP_CONFIG_DATA(SSP, 0, 24)))
 
 # BT offload on SSP2
-DAI_CONFIG(SSP, 2,  eval(SMART_BE_ID + 1), SSP2-Codec,
-          SSP_CONFIG(DSP_A, SSP_CLOCK(mclk, 38400000, codec_mclk_in),
-                     SSP_CLOCK(bclk, 1536000, codec_slave),
-                     SSP_CLOCK(fsync, 48000, codec_slave),
-                     SSP_TDM(2, 16, 3, 0),
-                     SSP_CONFIG_DATA(SSP, 2, 16, 0, 0)))
+
+define(`hwconfig_names', HW_CONFIG_NAMES(LIST(`     ', "hw_config1", "hw_config2", "hw_config3")))
+define(`data_names', DAI_DATA_NAMES(LIST(`     ', "ssp_data1", "ssp_data2", "ssp_data3")))
+
+define(`ssp_config_list_1', LIST(`',
+	`MULTI_SSP_CONFIG(hw_config1, 8, DSP_A, SSP_CLOCK(mclk, 38400000, codec_mclk_in),'
+		`SSP_CLOCK(bclk, 1536000, codec_slave),'
+		`SSP_CLOCK(fsync, 48000, codec_slave),'
+		`SSP_TDM(2, 16, 3, 0),'
+		`SSP_MULTI_CONFIG_DATA(ssp_data1, 16))',
+	`MULTI_SSP_CONFIG(hw_config2, 8, DSP_A, SSP_CLOCK(mclk, 19200000, codec_mclk_in),'
+		`SSP_CLOCK(bclk, 128000, codec_master, inverted),'
+		`SSP_CLOCK(fsync, 8000, codec_master),'
+		`SSP_TDM(1, 16, 1, 1),'
+		`SSP_MULTI_CONFIG_DATA(ssp_data2, 16))',
+	`MULTI_SSP_CONFIG(hw_config3, 9, DSP_A, SSP_CLOCK(mclk, 19200000, codec_mclk_in),'
+		`SSP_CLOCK(bclk, 256000, codec_master, inverted),'
+		`SSP_CLOCK(fsync, 16000, codec_master),'
+		`SSP_TDM(1, 16, 1, 1),'
+		`SSP_MULTI_CONFIG_DATA(ssp_data3, 16))'))
+
+MULTI_DAI_CONFIG(SSP, 2, eval(SMART_BE_ID + 1), SSP2-Codec, ssp_config_list_1, hwconfig_names, data_names)
 
 # 4 HDMI/DP outputs (ID: 3,4,5,6)
 DAI_CONFIG(HDA, 0, 3, iDisp1,
