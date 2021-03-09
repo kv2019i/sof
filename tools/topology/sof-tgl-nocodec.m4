@@ -188,8 +188,8 @@ DAI_CONFIG(SSP, 2, 2, NoCodec-2,
 	   SSP_CONFIG(DSP_A, SSP_CLOCK(mclk, 38400000, codec_mclk_in),
 		      SSP_CLOCK(bclk, 1536000, codec_slave),
 		      SSP_CLOCK(fsync, 48000, codec_slave),
-		      SSP_TDM(2, 16, 3, 0),
-		      SSP_CONFIG_DATA(SSP, 2, 16, 0, 0)))
+		      SSP_TDM(2, 16, 3, 3),
+		      SSP_CONFIG_DATA(SSP, 2, 16, 0, SSP_QUIRK_LBM)))
 
 DAI_CONFIG(DMIC, 0, 6, NoCodec-6,
 	   dnl DMIC_CONFIG(driver_version, clk_min, clk_mac, duty_min, duty_max,
