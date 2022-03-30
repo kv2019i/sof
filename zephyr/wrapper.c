@@ -590,6 +590,9 @@ int task_main_start(struct sof *sof)
 	/* let host know DSP boot is complete */
 	ret = platform_boot_complete(0);
 
+	/* force one non-primary core on for panic testing */
+	arch_cpu_enable_core(1);
+
 	return ret;
 }
 

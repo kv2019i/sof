@@ -104,6 +104,17 @@ static void zephyr_domain_timer_fn(struct k_timer *timer)
 	if (!zephyr_domain)
 		return;
 
+	{
+		static int foo = 300;
+		static int bar = 0;
+
+		if (cpu_get_id() > 0) {
+			if (foo == 1)
+				printk("foo is %d, will panic next\n", foo);
+			bar = cpu_get_id() / foo--;
+		}
+	}
+
 	/*
 	 * This loop should only run once, but for the (nearly) impossible
 	 * case of a missed interrupt, add as many periods as needed. In fact
