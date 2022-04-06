@@ -848,6 +848,26 @@ static void dw_dma_verify_transfer(struct dma_chan_data *channel,
 #endif
 }
 
+#define PERF_COPY_TIMING 1
+#ifdef PERF_COPY_TIMING
+
+/* perf measurement windows size 2^x */
+#define PERF_WINDOW_SIZE       10
+
+struct perf_timer {
+	       unsigned int runs;
+	       unsigned int sum;
+	       unsigned int max;
+	       unsigned int last;
+	};
+
+static struct perf_timer _d[4] = { { 0 } };
+
+static int dw_dma_get_data_size(struct dma_chan_data *channel,
+				uint32_t *avail, uint32_t *free);
+
+#endif
+
 static int dw_dma_copy(struct dma_chan_data *channel, int bytes,
 		       uint32_t flags)
 {
@@ -866,6 +886,25 @@ static int dw_dma_copy(struct dma_chan_data *channel, int bytes,
 	notifier_event(channel, NOTIFIER_ID_DMA_COPY,
 		       NOTIFIER_TARGET_CORE_LOCAL, &next, sizeof(next));
 
+
+#ifdef PERF_COPY_TIMING
+	unsigned int avail, free;
+	int core = arch_curr_cpu()->id;
+
+	dw_dma_get_data_size(channel, &avail, &free);
+
+	_d[core].sum += avail;
+	_d[core].max = avail > _d[core].max ? avail : _d[core].max;
+
+	if (++_d[core].runs == 1 << PERF_WINDOW_SIZE) {
+		_d[core].sum >>= PERF_WINDOW_SIZE;
+		tr_info(&dwdma_tr, "core%d dw-dma-copy avg %u, max %u avail\n",
+			core, _d[core].sum, _d[core].max);
+		_d[core].sum = 0;
+		_d[core].max = 0;
+		_d[core].runs = 0;
+	}
+#endif
 	if (flags & DMA_COPY_ONE_SHOT) {
 		/* for one shot copy start the DMA */
 		ret = dw_dma_start(channel);
