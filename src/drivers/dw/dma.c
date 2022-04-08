@@ -848,6 +848,9 @@ static void dw_dma_verify_transfer(struct dma_chan_data *channel,
 #endif
 }
 
+static int dw_dma_get_data_size(struct dma_chan_data *channel,
+				uint32_t *avail, uint32_t *free);
+
 static int dw_dma_copy(struct dma_chan_data *channel, int bytes,
 		       uint32_t flags)
 {
@@ -859,9 +862,13 @@ static int dw_dma_copy(struct dma_chan_data *channel, int bytes,
 		.status = DMA_CB_STATUS_END,
 	};
 	k_spinlock_key_t key;
+	uint32_t dataavail, datafree;
 
-	tr_dbg(&dwdma_tr, "dw_dma_copy(): dma %d channel %d copy",
+	tr_info(&dwdma_tr, "dw_dma_copy(): dma %d channel %d copy",
 	       channel->dma->plat_data.id, channel->index);
+	dw_dma_get_data_size(channel, &dataavail, &datafree);
+	tr_info(&dwdma_tr, "dw_dma_copy(): avail %u, free %u",
+		dataavail, datafree);
 
 	notifier_event(channel, NOTIFIER_ID_DMA_COPY,
 		       NOTIFIER_TARGET_CORE_LOCAL, &next, sizeof(next));
@@ -891,6 +898,8 @@ static int dw_dma_copy(struct dma_chan_data *channel, int bytes,
 	key = k_spin_lock(&channel->dma->lock);
 	dw_dma_increment_pointer(dw_chan, bytes);
 	k_spin_unlock(&channel->dma->lock, key);
+
+	tr_info(&dwdma_tr, "dw_dma_copy(): %d bytes", bytes);
 
 	return ret;
 }
