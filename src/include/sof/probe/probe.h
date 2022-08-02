@@ -13,6 +13,16 @@
 #include <ipc/probe.h>
 
 /*
+ * TODO:
+ *   - In IPC4, logging is enabled by attaching a probe
+ *     with ".probe_id.fields.module_id == 0".
+ *   - IPC3 does not have such a field, in IPC3 logging
+ *     prototype, a magic buffer identifier that is known
+ *     both by host and the FW, is used.
+ */
+#define PROBE_LOGGING_BUFFER_ID_MAGIC     999999
+
+/*
  * \brief Initialize probes subsystem
  *
  * param[in,optional] extraction_probe_dma - DMA associated with extraction

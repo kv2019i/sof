@@ -906,6 +906,8 @@ static void probe_cb_free(void *arg, enum notify_id type, void *data)
 		tr_err(&pr_tr, "probe_cb_free(): probe_point_remove() failed");
 }
 
+extern struct ipc_comp_dev logging_comp;
+
 int probe_point_add(uint32_t count, struct probe_point *probe)
 {
 	struct probe_pdata *_probe = probe_get();
@@ -915,6 +917,7 @@ int probe_point_add(uint32_t count, struct probe_point *probe)
 	uint32_t first_free;
 	uint32_t dma_found;
 	struct ipc_comp_dev *dev;
+	struct comp_buffer *caller_id;
 
 	tr_dbg(&pr_tr, "probe_point_add() count = %u", count);
 
@@ -945,20 +948,26 @@ int probe_point_add(uint32_t count, struct probe_point *probe)
 			return -EINVAL;
 		}
 
-		/* check if buffer exists */
-		dev = ipc_get_comp_by_id(ipc_get(), probe[i].buffer_id);
-		if (!dev) {
-			tr_err(&pr_tr, "probe_point_add(): No device with ID %u found.",
-			       probe[i].buffer_id);
-
-			return -EINVAL;
+		if (probe[i].buffer_id == PROBE_LOGGING_BUFFER_ID_MAGIC) {
+			/* special case for logging buffers */
+			dev = 0;
 		}
+		else {
+			/* check if buffer exists */
+			dev = ipc_get_comp_by_id(ipc_get(), probe[i].buffer_id);
+			if (!dev) {
+				tr_err(&pr_tr, "probe_point_add(): No device with ID %u found.",
+					probe[i].buffer_id);
 
-		if (dev->type != COMP_TYPE_BUFFER) {
-			tr_err(&pr_tr, "probe_point_add(): Device ID %u is not a buffer.",
-			       probe[i].buffer_id);
+				return -EINVAL;
+			}
 
-			return -EINVAL;
+			if (dev->type != COMP_TYPE_BUFFER) {
+				tr_err(&pr_tr, "probe_point_add(): Device ID %u is not a buffer.",
+					probe[i].buffer_id);
+
+				return -EINVAL;
+			}
 		}
 
 		first_free = CONFIG_PROBE_POINTS_MAX;
@@ -1038,9 +1047,12 @@ int probe_point_add(uint32_t count, struct probe_point *probe)
 		_probe->probe_points[first_free].stream_tag =
 			probe[i].stream_tag;
 
-		notifier_register(_probe, dev->cb, NOTIFIER_ID_BUFFER_PRODUCE,
+		/* special case if logging backend is the source */
+		caller_id = dev ? dev->cb : logging_comp.cb;
+
+		notifier_register(_probe, caller_id, NOTIFIER_ID_BUFFER_PRODUCE,
 				  &probe_cb_produce, 0);
-		notifier_register(_probe, dev->cb, NOTIFIER_ID_BUFFER_FREE,
+		notifier_register(_probe, caller_id, NOTIFIER_ID_BUFFER_FREE,
 				  &probe_cb_free, 0);
 	}
 
