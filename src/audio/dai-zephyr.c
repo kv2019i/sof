@@ -165,8 +165,12 @@ static int dai_get_hw_params(struct dai *dai, struct sof_ipc_stream_params  *par
 {
 	const struct dai_config *cfg = dai_config_get(dai->dev, dir);
 
+	tr_info(&dai_comp_tr, "dai_hw_params()");
+
 	if (!cfg)
 		return -EINVAL;
+
+	tr_info(&dai_comp_tr, "dai_hw_params() hw-rate %u chan %u", cfg->rate, cfg->channels);
 
 	params->rate = cfg->rate;
 	params->buffer_fmt = 0;
@@ -386,7 +390,7 @@ static int dai_comp_get_hw_params(struct comp_dev *dev,
 	struct dai_data *dd = comp_get_drvdata(dev);
 	int ret;
 
-	comp_dbg(dev, "dai_hw_params()");
+	comp_info(dev, "dai_hw_params()");
 
 	/* fetching hw dai stream params */
 	ret = dai_get_hw_params(dd->dai, params, dir);
