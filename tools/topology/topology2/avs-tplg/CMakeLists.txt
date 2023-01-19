@@ -41,8 +41,11 @@ PREPROCESS_PLUGINS=nhlt,NHLT_BIN=nhlt-sof-tgl-nocodec.bin,DEEPBUFFER_FW_DMA_MS=1
 "cavs-nocodec\;sof-adl-nocodec\;NUM_DMICS=4,PDM1_MIC_A_ENABLE=1,PDM1_MIC_B_ENABLE=1,\
 PREPROCESS_PLUGINS=nhlt,NHLT_BIN=nhlt-sof-adl-nocodec.bin,DEEPBUFFER_FW_DMA_MS=100"
 
-"cavs-nocodec-bt\;sof-adl-nocodec-bt\;NUM_DMICS=4,PDM1_MIC_A_ENABLE=1,PDM1_MIC_B_ENABLE=1,\
-PREPROCESS_PLUGINS=nhlt,NHLT_BIN=nhlt-sof-adl-nocodec-bt.bin"
+# BT offload
+"cavs-nocodec-bt\;sof-nocodec-bt\;BT_LOOPACK_MODE=0,\
+PREPROCESS_PLUGINS=nhlt,NHLT_BIN=nhlt-sof-nocodec-bt.bin"
+"cavs-nocodec-bt\;sof-nocodec-bt-lbm\;BT_LOOPACK_MODE=1,\
+PREPROCESS_PLUGINS=nhlt,NHLT_BIN=nhlt-sof-nocodec-bt-lbm.bin"
 )
 
 add_custom_target(topology2_cavs)
