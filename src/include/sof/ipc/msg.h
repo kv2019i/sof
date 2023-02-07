@@ -113,6 +113,8 @@ void ipc_send_queued_msg(void);
  */
 void ipc_msg_send(struct ipc_msg *msg, void *data, bool high_priority);
 
+void ipc_msg_send_direct(struct ipc_msg *msg, void *data);
+
 /**
  * \brief Build stream position IPC message.
  * @param[in,out] posn Stream position message

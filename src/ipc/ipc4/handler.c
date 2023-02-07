@@ -1010,6 +1010,22 @@ void ipc_boot_complete_msg(struct ipc_cmd_hdr *header, uint32_t data)
 	header->ext = 0;
 }
 
+void ipc_send_panic_notification(void)
+{
+	printk("KV: send exception IPC\n");
+
+	msg_notify.header = SOF_IPC4_NOTIF_HEADER(SOF_IPC4_EXCEPTION_CAUGHT);
+	msg_notify.extension = 0;
+	msg_notify.tx_size = 0;
+	list_init(&msg_notify.list);
+
+	tr_dbg(&ipc_tr, "tx-notify\t: %#x|%#x", msg_notify.header, msg_notify.extension);
+
+	ipc_msg_send_direct(&msg_notify, NULL);
+	printk("KV: .. sent\n");
+
+}
+
 #ifdef CONFIG_LOG_BACKEND_ADSP_MTRACE
 
 static bool is_notification_queued(void)

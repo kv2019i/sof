@@ -96,6 +96,7 @@ struct timer;
 /* Platform defined trace code */
 static inline void platform_panic(uint32_t p)
 {
+	p = 0xabbadddd;
 	mailbox_sw_reg_write(SRAM_REG_FW_STATUS, p & 0x3fffffff);
 	ipc_write(IPC_DIPCIDD, MAILBOX_EXCEPTION_OFFSET + 2 * 0x20000);
 	ipc_write(IPC_DIPCIDR, 0x80000000 | (p & 0x3fffffff));

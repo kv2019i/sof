@@ -298,3 +298,22 @@ int poll_for_register_delay(uint32_t reg, uint32_t mask,
 	return 0;
 }
 
+//#include <kernel_internal.h>
+#include <zephyr/kernel_structs.h>
+#include <zephyr/sys/__assert.h>
+#include <zephyr/arch/cpu.h>
+#include <zephyr/logging/log_ctrl.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/fatal.h>
+
+void k_sys_fatal_error_handler(unsigned int reason,
+			       const z_arch_esf_t *esf)
+{
+	ARG_UNUSED(esf);
+	LOG_PANIC();
+	printk("KV: my halt handler\n");
+	//platform_panic(reason);
+	ipc_send_panic_notification();
+	LOG_ERR("Halting system");
+	arch_system_halt(reason);
+}
