@@ -79,7 +79,7 @@ int platform_init(struct sof *sof)
 
 	trace_point(TRACE_BOOT_PLATFORM_CLOCK);
 	platform_clock_init(sof);
-	clock_set_freq(CLK_CPU(cpu_get_id()), CLK_MAX_CPU_HZ);
+	clock_set_freq(CLK_CPU(cpu_get_id()), 120000000);
 
 	trace_point(TRACE_BOOT_PLATFORM_SCHED);
 	scheduler_init_edf();
