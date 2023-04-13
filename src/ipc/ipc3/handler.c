@@ -1138,6 +1138,8 @@ static int ipc_probe_info(uint32_t header)
 	return ret;
 }
 
+#include <sof/debug/panic.h>
+
 static int ipc_glb_probe(uint32_t header)
 {
 	uint32_t cmd = iCS(header);
@@ -1169,7 +1171,7 @@ static int ipc_glb_probe(uint32_t header)
 static inline int ipc_glb_probe(uint32_t header)
 {
 	tr_err(&ipc_tr, "ipc_glb_probe(): Probes not enabled by Kconfig.");
-
+	panic(SOF_IPC_PANIC_ASSERT);
 	return -EINVAL;
 }
 #endif
