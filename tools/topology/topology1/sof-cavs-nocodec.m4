@@ -88,8 +88,8 @@ define(SSP1_IDX, `1')
 define(SSP2_IDX, `2')
 ')
 
-define(PIPE_BITS, `s32le')
-define(DAI_BITS, `s24le')
+define(PIPE_BITS, `s16le')
+define(DAI_BITS, `s16le')
 
 #
 # Define the pipelines
@@ -113,12 +113,17 @@ dnl     period, priority, core,
 dnl     pcm_min_rate, pcm_max_rate, pipeline_rate,
 dnl     time_domain, sched_comp)
 
+define(`CHANNELS_MIN', 1)
+
 # Volume switch capture pipeline 2 on PCM 0 using max 2 channels of PIPE_BITS.
 # Set 1000us deadline on core SSP0_CORE_ID with priority 0
-PIPELINE_PCM_ADD(sof/pipe-volume-switch-capture.m4,
-	2, 0, 2, PIPE_BITS,
+PIPELINE_PCM_ADD(sof/pipe-passthrough-capture.m4,
+	2, 0, 1, PIPE_BITS,
 	1000, 0, SSP0_CORE_ID,
-	48000, 48000, 48000)
+	8000, 48000, 48000)
+
+# We are done
+undefine(`CHANNELS_MIN')
 
 # Volume switch capture pipeline 4 on PCM 1 using max 2 channels of PIPE_BITS.
 # Set 1000us deadline on core SSP1_CORE_ID with priority 0
@@ -127,12 +132,53 @@ PIPELINE_PCM_ADD(sof/pipe-volume-switch-capture.m4,
 	1000, 0, SSP1_CORE_ID,
 	48000, 48000, 48000)
 
+define(`CHANNELS_MIN', 1)
+
 # Volume switch capture pipeline 6 on PCM 2 using max 2 channels of PIPE_BITS.
 # Set 1000us deadline with priority 0 on core SSP2_CORE_ID
-PIPELINE_PCM_ADD(sof/pipe-volume-switch-capture.m4,
-	6, 2, 2, PIPE_BITS,
+#PIPELINE_PCM_ADD(sof/pipe-volume-switch-capture.m4,
+PIPELINE_PCM_ADD(sof/pipe-passthrough-capture.m4,
+	6, 2, 1, s16le,
 	1000, 0, SSP2_CORE_ID,
+	8000, 48000, 48000)
+
+# Low Latency playback pipeline 1 on PCM 0 using max 2 channels of PIPE_BITS.
+# Set 1000us deadline on core SSP0_CORE_ID with priority 0
+#PIPELINE_PCM_ADD(sof/pipe-host-volume-playback.m4,
+PIPELINE_PCM_ADD(sof/pipe-volume-playback.m4,
+	1, 0, 1, PIPE_BITS,
+	1000, 0, SSP0_CORE_ID,
+	8000, 48000, 48000)
+
+# We are done
+undefine(`CHANNELS_MIN')
+
+# Low Latency playback pipeline 8 on PCM 1 using max 2 channels of PIPE_BITS.
+# Set 1000us deadline on core SSP1_CORE_ID with priority 0
+#PIPELINE_PCM_ADD(sof/pipe-host-volume-playback.m4,
+PIPELINE_PCM_ADD(sof/pipe-volume-playback.m4,
+	3, 1, 2, PIPE_BITS,
+	1000, 0, SSP1_CORE_ID,
 	48000, 48000, 48000)
+	#SCHEDULE_TIME_DOMAIN_TIMER,
+	#PIPELINE_PLAYBACK_SCHED_COMP_3)
+
+define(`CHANNELS_MIN', 1)
+
+# Low Latency playback pipeline 9 on PCM 2 using max 2 channels of PIPE_BITS.
+# Set 1000us deadline on core SSP2_CORE_ID with priority 0
+#PIPELINE_PCM_ADD(sof/pipe-host-volume-playback.m4,
+#PIPELINE_PCM_ADD(sof/pipe-volume-playback.m4,
+PIPELINE_PCM_ADD(sof/pipe-passthrough-playback.m4,
+	5, 2, 1, s16le,
+	1000, 0, SSP2_CORE_ID,
+	8000, 8000, 8000)
+
+# We are done
+undefine(`CHANNELS_MIN')
+
+#SCHEDULE_TIME_DOMAIN_TIMER,
+	#PIPELINE_PLAYBACK_SCHED_COMP_5)
 
 #
 # DAIs configuration
@@ -146,53 +192,26 @@ dnl     deadline, priority, core, time_domain)
 # playback DAI is SSP0 using 2 periods
 # Buffers use DAI_BITS format, 1000us deadline with priority 0 on core SSP0_CORE_ID
 # The 'NOT_USED_IGNORED' is due to dependencies and is adjusted later with an explicit dapm line.
-DAI_ADD(sof/pipe-mixer-volume-dai-playback.m4,
+#DAI_ADD(sof/pipe-mixer-volume-dai-playback.m4,
+DAI_ADD(sof/pipe-dai-playback.m4,
 	1, SSP, SSP0_IDX, NoCodec-0,
-	NOT_USED_IGNORED, 2, DAI_BITS,
-	1000, 0, SSP0_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER, 2, 48000)
-
-# Low Latency playback pipeline 1 on PCM 0 using max 2 channels of PIPE_BITS.
-# Set 1000us deadline on core SSP0_CORE_ID with priority 0
-PIPELINE_PCM_ADD(sof/pipe-host-volume-playback.m4,
-	7, 0, 2, PIPE_BITS,
-	1000, 0, SSP0_CORE_ID,
-	48000, 48000, 48000,
-	SCHEDULE_TIME_DOMAIN_TIMER,
-	PIPELINE_PLAYBACK_SCHED_COMP_1)
-
-# Deep buffer playback pipeline 11 on PCM 3 using max 2 channels of PIPE_BITS.
-# Set 1000us deadline on core SSP0_CORE_ID with priority 0.
-# TODO: Modify pipeline deadline to account for deep buffering
-ifelse(PLATFORM, `bxt', `',
-`PIPELINE_PCM_ADD(sof/pipe-host-volume-playback.m4,
-	11, 3, 2, PIPE_BITS,
-	1000, 0, SSP0_CORE_ID,
-	48000, 48000, 48000,
-	SCHEDULE_TIME_DOMAIN_TIMER,
-	PIPELINE_PLAYBACK_SCHED_COMP_1)')
+	PIPELINE_SOURCE_1, 2, s16le,
+	1000, 0, SSP0_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER, 1, 8000)
 
 # capture DAI is SSP0 using 2 periods
 # Buffers use DAI_BITS format, 1000us deadline with priority 0 on core SSP0_IDX
 DAI_ADD(sof/pipe-dai-capture.m4,
 	2, SSP, SSP0_IDX, NoCodec-0,
-	PIPELINE_SINK_2, 2, DAI_BITS,
-	1000, 0, SSP0_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER)
+	PIPELINE_SINK_2, 2, s16le,
+	1000, 0, SSP0_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER, 1, 8000)
 
 # playback DAI is SSP1 using 2 periods
 # Buffers use DAI_BITS format, 1000us deadline with priority 0 on core SSP1_CORE_ID
-DAI_ADD(sof/pipe-mixer-volume-dai-playback.m4,
+#DAI_ADD(sof/pipe-mixer-volume-dai-playback.m4,
+DAI_ADD(sof/pipe-dai-playback.m4,
 	3, SSP, SSP1_IDX, NoCodec-1,
-	NOT_USED_IGNORED, 2, DAI_BITS,
+	PIPELINE_SOURCE_3, 2, s16le,
 	1000, 0, SSP1_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER, 2, 48000)
-
-# Low Latency playback pipeline 8 on PCM 1 using max 2 channels of PIPE_BITS.
-# Set 1000us deadline on core SSP1_CORE_ID with priority 0
-PIPELINE_PCM_ADD(sof/pipe-host-volume-playback.m4,
-	8, 1, 2, PIPE_BITS,
-	1000, 0, SSP1_CORE_ID,
-	48000, 48000, 48000,
-	SCHEDULE_TIME_DOMAIN_TIMER,
-	PIPELINE_PLAYBACK_SCHED_COMP_3)
 
 # capture DAI is SSP1 using 2 periods
 # Buffers use DAI_BITS format, 1000us deadline with priority 0 on core SSP1_CORE_ID
@@ -203,64 +222,30 @@ DAI_ADD(sof/pipe-dai-capture.m4,
 
 # playback DAI is SSP2 using 2 periods
 # Buffers use DAI_BITS format, 1000us deadline with priority 0 on core SSP2_CORE_ID
-DAI_ADD(sof/pipe-mixer-volume-dai-playback.m4,
+#DAI_ADD(sof/pipe-mixer-volume-dai-playback.m4,
+DAI_ADD(sof/pipe-dai-playback.m4,
 	5, SSP, SSP2_IDX, NoCodec-2,
-	NOT_USED_IGNORED, 2, DAI_BITS,
-	1000, 0, SSP2_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER, 2, 48000)
-
-# Low Latency playback pipeline 9 on PCM 2 using max 2 channels of PIPE_BITS.
-# Set 1000us deadline on core SSP2_CORE_ID with priority 0
-PIPELINE_PCM_ADD(sof/pipe-host-volume-playback.m4,
-	9, 2, 2, PIPE_BITS,
-	1000, 0, SSP2_CORE_ID,
-	48000, 48000, 48000,
-	SCHEDULE_TIME_DOMAIN_TIMER,
-	PIPELINE_PLAYBACK_SCHED_COMP_5)
-
-# Deep buffer playback pipeline 11 on PCM 3 using max 2 channels of PIPE_BITS.
-# Set 1000us deadline on core SSP2_CORE_ID with priority 0.
-# TODO: Modify pipeline deadline to account for deep buffering
-ifelse(PLATFORM, `bxt',
-`PIPELINE_PCM_ADD(sof/pipe-host-volume-playback.m4,
-	11, 3, 2, PIPE_BITS,
-	1000, 0, SSP2_CORE_ID,
-	48000, 48000, 48000,
-	SCHEDULE_TIME_DOMAIN_TIMER,
-	PIPELINE_PLAYBACK_SCHED_COMP_5)')
+	PIPELINE_SOURCE_5, 2, s16le,
+	1000, 0, SSP2_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER, 1, 8000)
 
 # capture DAI is SSP2 using 2 periods
 # Buffers use DAI_BITS format, 1000us deadline with priority 0 on core SSP2_CORE_ID
 DAI_ADD(sof/pipe-dai-capture.m4,
 	6, SSP, SSP2_IDX, NoCodec-2,
-	PIPELINE_SINK_6, 2, DAI_BITS,
-	1000, 0, SSP2_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER)
-
-SectionGraph."mixer-host" {
-	index "0"
-
-	lines [
-		# connect mixer dai pipelines to PCM pipelines
-		dapm(PIPELINE_MIXER_1, PIPELINE_SOURCE_7)
-		dapm(PIPELINE_MIXER_3, PIPELINE_SOURCE_8)
-		dapm(PIPELINE_MIXER_5, PIPELINE_SOURCE_9)
-		ifelse(PLATFORM, `bxt',
-			`dapm(PIPELINE_MIXER_5, PIPELINE_SOURCE_11)',
-			`dapm(PIPELINE_MIXER_1, PIPELINE_SOURCE_11)')
-
-	]
-}
+	PIPELINE_SINK_6, 1, s16le,
+	1000, 0, SSP2_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER, 1, 8000)
 
 dnl PCM_DUPLEX_ADD(name, pcm_id, playback, capture)
 ifdef(`DISABLE_SSP0',,
-PCM_DUPLEX_ADD(`Port'SSP0_IDX, 0, PIPELINE_PCM_7, PIPELINE_PCM_2)
+#PCM_DUPLEX_ADD(`Port'SSP0_IDX, 0, PIPELINE_PCM_7, PIPELINE_PCM_2)
+PCM_DUPLEX_ADD(`Port'SSP0_IDX, 0, PIPELINE_PCM_1, PIPELINE_PCM_2)
 )
 ifdef(`DISABLE_SSP1',,
-PCM_DUPLEX_ADD(`Port'SSP1_IDX, 1, PIPELINE_PCM_8, PIPELINE_PCM_4)
+#PCM_DUPLEX_ADD(`Port'SSP1_IDX, 1, PIPELINE_PCM_8, PIPELINE_PCM_4)
+PCM_DUPLEX_ADD(`Port'SSP1_IDX, 1, PIPELINE_PCM_3, PIPELINE_PCM_4)
+#PCM_DUPLEX_ADD(`Port'SSP2_IDX, 2, PIPELINE_PCM_5, PIPELINE_PCM_6)
+PCM_DUPLEX_ADD(`Port'SSP2_IDX, 2, PIPELINE_PCM_5, PIPELINE_PCM_6)
 )
-PCM_DUPLEX_ADD(`Port'SSP2_IDX, 2, PIPELINE_PCM_9, PIPELINE_PCM_6)
-ifelse(PLATFORM,`bxt',
-`PCM_PLAYBACK_ADD(`Port'SSP2_IDX` Deep Buffer', 3, PIPELINE_PCM_11)',
-`PCM_PLAYBACK_ADD(`Port'SSP0_IDX` Deep Buffer', 3, PIPELINE_PCM_11)')
 
 #
 # BE configurations - overrides config in ACPI if present
@@ -336,10 +321,10 @@ ifelse(ROOT_CLK, `38_4',
 `
 DAI_CONFIG(SSP, SSP0_IDX, 0, NoCodec-0,
 	   SSP_CONFIG(I2S, SSP_CLOCK(mclk, 38400000, codec_mclk_in),
-		      SSP_CLOCK(bclk, 2400000, codec_slave),
-		      SSP_CLOCK(fsync, 48000, codec_slave),
-		      SSP_TDM(2, 25, 3, 3),
-		      SSP_CONFIG_DATA(SSP, SSP0_IDX, 24, 0, SSP_QUIRK_LBM, 0,
+		      SSP_CLOCK(bclk, 128000, codec_slave),
+		      SSP_CLOCK(fsync, 8000, codec_slave),
+		      SSP_TDM(1, 16, 1, 1),
+		      SSP_CONFIG_DATA(SSP, SSP0_IDX, 16, 0, SSP_QUIRK_LBM, 0,
 				      eval(SSP_CC_MCLK_ES | SSP_CC_BCLK_ES))))
 
 DAI_CONFIG(SSP, SSP1_IDX, 1, NoCodec-1,
@@ -352,9 +337,9 @@ DAI_CONFIG(SSP, SSP1_IDX, 1, NoCodec-1,
 
 DAI_CONFIG(SSP, SSP2_IDX, 2, NoCodec-2,
 	   SSP_CONFIG(I2S, SSP_CLOCK(mclk, 38400000, codec_mclk_in),
-		      SSP_CLOCK(bclk, 2400000, codec_slave),
-		      SSP_CLOCK(fsync, 48000, codec_slave),
-		      SSP_TDM(2, 25, 3, 3),
-		      SSP_CONFIG_DATA(SSP, SSP2_IDX, 24, 0, SSP_QUIRK_LBM, 0,
+		      SSP_CLOCK(bclk, 128000, codec_slave),
+		      SSP_CLOCK(fsync, 8000, codec_slave),
+		      SSP_TDM(1, 16, 1, 1),
+		      SSP_CONFIG_DATA(SSP, SSP2_IDX, 16, 0, SSP_QUIRK_LBM, 0,
 				      eval(SSP_CC_MCLK_ES | SSP_CC_BCLK_ES))))
 ')
