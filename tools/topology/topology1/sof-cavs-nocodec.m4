@@ -138,7 +138,7 @@ define(`CHANNELS_MIN', 1)
 # Set 1000us deadline with priority 0 on core SSP2_CORE_ID
 #PIPELINE_PCM_ADD(sof/pipe-volume-switch-capture.m4,
 PIPELINE_PCM_ADD(sof/pipe-passthrough-capture.m4,
-	6, 2, 1, s16le,
+	6, 2, 2, s16le,
 	1000, 0, SSP2_CORE_ID,
 	8000, 48000, 48000)
 
@@ -170,9 +170,9 @@ define(`CHANNELS_MIN', 1)
 #PIPELINE_PCM_ADD(sof/pipe-host-volume-playback.m4,
 #PIPELINE_PCM_ADD(sof/pipe-volume-playback.m4,
 PIPELINE_PCM_ADD(sof/pipe-passthrough-playback.m4,
-	5, 2, 1, s16le,
+	5, 2, 2, s16le,
 	1000, 0, SSP2_CORE_ID,
-	8000, 8000, 8000)
+	8000, 48000, 48000)
 
 # We are done
 undefine(`CHANNELS_MIN')
@@ -226,14 +226,14 @@ DAI_ADD(sof/pipe-dai-capture.m4,
 DAI_ADD(sof/pipe-dai-playback.m4,
 	5, SSP, SSP2_IDX, NoCodec-2,
 	PIPELINE_SOURCE_5, 2, s16le,
-	1000, 0, SSP2_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER, 1, 8000)
+	1000, 0, SSP2_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER, 1, 16000)
 
 # capture DAI is SSP2 using 2 periods
 # Buffers use DAI_BITS format, 1000us deadline with priority 0 on core SSP2_CORE_ID
 DAI_ADD(sof/pipe-dai-capture.m4,
 	6, SSP, SSP2_IDX, NoCodec-2,
 	PIPELINE_SINK_6, 1, s16le,
-	1000, 0, SSP2_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER, 1, 8000)
+	1000, 0, SSP2_CORE_ID, SCHEDULE_TIME_DOMAIN_TIMER, 1, 16000)
 
 dnl PCM_DUPLEX_ADD(name, pcm_id, playback, capture)
 ifdef(`DISABLE_SSP0',,
@@ -337,9 +337,9 @@ DAI_CONFIG(SSP, SSP1_IDX, 1, NoCodec-1,
 
 DAI_CONFIG(SSP, SSP2_IDX, 2, NoCodec-2,
 	   SSP_CONFIG(I2S, SSP_CLOCK(mclk, 38400000, codec_mclk_in),
-		      SSP_CLOCK(bclk, 128000, codec_slave),
-		      SSP_CLOCK(fsync, 8000, codec_slave),
-		      SSP_TDM(1, 16, 1, 1),
+		      SSP_CLOCK(bclk, 512000, codec_slave),
+		      SSP_CLOCK(fsync, 16000, codec_slave),
+		      SSP_TDM(2, 16, 3, 3),
 		      SSP_CONFIG_DATA(SSP, SSP2_IDX, 16, 0, SSP_QUIRK_LBM, 0,
 				      eval(SSP_CC_MCLK_ES | SSP_CC_BCLK_ES))))
 ')
