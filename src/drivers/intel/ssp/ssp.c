@@ -112,6 +112,46 @@ static void ssp_empty_rx_fifo(struct dai *dai)
 	ssp_update_bits(dai, SSSR, SSSR_ROR, SSSR_ROR);
 }
 
+#define SSP_DUMP_ENTRIES	64
+
+static uint32_t rx_dump[SSP_DUMP_ENTRIES];
+
+static void ssp_dump_rx_fifo(struct dai *dai)
+{
+	struct ssp_pdata *ssp = dai_get_drvdata(dai);
+	uint64_t sample_ticks = clock_ticks_per_sample(PLATFORM_DEFAULT_CLOCK,
+						       ssp->params.fsync_rate);
+	uint32_t loops = SSP_DUMP_ENTRIES * 2;
+	uint32_t entries;
+	uint32_t i, j = 0;
+	struct trace_filter filter = { 0 };
+
+	/* disable log throttling */
+	trace_filter_update(&filter);
+
+	while (loops-- && j < SSP_DUMP_ENTRIES) {
+		entries = SSCR3_RFL_VAL(ssp_read(dai, SSCR3));
+
+		if (entries >= 0xf) {
+			if (!ssp_read(dai, SSSR) & SSSR_RNE)
+				entries = 0;
+		}
+
+		for (i = 0; i < entries + 1; i++) {
+			rx_dump[j] = ssp_read(dai, SSDR);
+			if (j++ >= SSP_DUMP_ENTRIES)
+				break;
+		}
+
+		wait_delay(sample_ticks);
+	}
+
+	dai_info(dai, "RX: %u items, sample tick %lu\n", j, (unsigned long)sample_ticks);
+	for (i = 0; i < j; i += 4) {
+		dai_info(dai, "RX: %08x %08x %08x %08x", rx_dump[i], rx_dump[i+1], rx_dump[i+2], rx_dump[i+3]);
+	}
+}
+
 static int ssp_mclk_prepare_enable(struct dai *dai)
 {
 	struct ssp_pdata *ssp = dai_get_drvdata(dai);
@@ -1030,6 +1070,9 @@ static void ssp_start(struct dai *dai, int direction)
 	}
 
 	k_spin_unlock(&dai->lock, key);
+
+	if (direction == DAI_DIR_CAPTURE)
+		ssp_dump_rx_fifo(dai);
 }
 
 /* stop the SSP for either playback or capture */
