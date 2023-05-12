@@ -1037,6 +1037,8 @@ static int dw_dma_remove(struct dma *dma)
 	return 0;
 }
 
+void ssp_dump_regs(void);
+
 /* capture */
 static int dw_dma_avail_data_size(struct dma_chan_data *channel)
 {
@@ -1062,7 +1064,9 @@ static int dw_dma_avail_data_size(struct dma_chan_data *channel)
 			tr_info(&dwdma_tr, "dw_dma_avail_data_size() size is 0!");
 	}
 
-	tr_dbg(&dwdma_tr, "DAR %x reader 0x%x free 0x%x avail 0x%x", write_ptr,
+	ssp_dump_regs();
+
+	tr_info(&dwdma_tr, "DAR %x reader 0x%x free 0x%x avail 0x%x", write_ptr,
 	       read_ptr, dw_chan->ptr_data.buffer_bytes - size, size);
 
 	return size;
