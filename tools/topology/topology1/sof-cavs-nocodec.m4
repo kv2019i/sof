@@ -336,10 +336,10 @@ DAI_CONFIG(SSP, SSP1_IDX, 1, NoCodec-1,
 				      eval(SSP_CC_MCLK_ES | SSP_CC_BCLK_ES))))
 
 DAI_CONFIG(SSP, SSP2_IDX, 2, NoCodec-2,
-	   SSP_CONFIG(I2S, SSP_CLOCK(mclk, 38400000, codec_mclk_in),
-		      SSP_CLOCK(bclk, 128000, codec_slave),
+	   SSP_CONFIG(DSP_A, SSP_CLOCK(mclk, 38400000, codec_mclk_in),
+		      SSP_CLOCK(bclk, 128000, codec_slave, inverted),
 		      SSP_CLOCK(fsync, 8000, codec_slave),
 		      SSP_TDM(1, 16, 1, 1),
-		      SSP_CONFIG_DATA(SSP, SSP2_IDX, 16, 0, SSP_QUIRK_LBM, 0,
-				      eval(SSP_CC_MCLK_ES | SSP_CC_BCLK_ES))))
+		      SSP_CONFIG_DATA(SSP, SSP2_IDX, 16, 0, SSP_QUIRK_LBM, 0
+				      )))
 ')
