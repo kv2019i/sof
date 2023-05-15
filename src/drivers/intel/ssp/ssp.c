@@ -130,14 +130,16 @@ static void ssp_dump_rx_fifo(struct dai *dai)
 	trace_filter_update(&filter);
 
 	while (loops-- && j < SSP_DUMP_ENTRIES) {
+		bool rne = ssp_read(dai, SSSR) & SSSR_RNE;
+
 		entries = SSCR3_RFL_VAL(ssp_read(dai, SSCR3));
 
-		if (entries >= 0xf) {
-			if (!ssp_read(dai, SSSR) & SSSR_RNE)
-				entries = 0;
-		}
+		if (rne)
+			++entries;
+		else if (entries >= 0xf)
+			entries = 0;
 
-		for (i = 0; i < entries + 1; i++) {
+		for (i = 0; i < entries; i++) {
 			rx_dump[j] = ssp_read(dai, SSDR);
 			if (j++ >= SSP_DUMP_ENTRIES)
 				break;
