@@ -272,6 +272,7 @@ void ssp_dump_regs(void)
 	uint32_t sspsp;
 	uint32_t sspsp2;
 	uint32_t ssioc;
+	uint32_t sssr;
 
 	/* rate-limit the output */
 	if (!(counter++ & (1 << 5)))
@@ -288,9 +289,10 @@ void ssp_dump_regs(void)
 	sspsp = ssp_read(dai, SSPSP);
 	sspsp2 = ssp_read(dai, SSPSP2);
 	ssioc = ssp_read(dai, SSIOC);
+	sssr = ssp_read(dai, SSSR);
 
-	dai_info(dai, "dump: sscr0 = 0x%08x, sscr1 = 0x%08x, sspsp = 0x%0x",
-		 sscr0, sscr1, sspsp);
+	dai_info(dai, "dump: sscr0 = 0x%08x, sscr1 = 0x%08x, sspsp = 0x%0x, sssr = 0x%0x",
+		 sscr0, sscr1, sspsp, sssr);
 	dai_info(dai, "dump: scr2 = 0x%08x, sspsp2 = 0x%08x, sscr3 = 0x%08x, ssioc = 0x%08x",
 		 sscr2, sspsp2, sscr3, ssioc);
 	dai_info(dai, "dump: sscr0 = 0x%08x, sscr1 = 0x%08x, sspsp 0x%0x",
