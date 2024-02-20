@@ -33,6 +33,11 @@
 #include <zephyr/logging/log_ctrl.h>
 #include <zephyr/logging/log.h>
 
+#if CONFIG_SOF_BOOT_TEST
+/* CONFIG_SOF_BOOT_TEST depends on Zephyr */
+#include <zephyr/ztest.h>
+#endif
+
 LOG_MODULE_REGISTER(zephyr, CONFIG_SOF_LOG_LEVEL);
 
 extern K_KERNEL_STACK_ARRAY_DEFINE(z_interrupt_stacks, CONFIG_MP_MAX_NUM_CPUS,
@@ -211,7 +216,13 @@ static int boot_complete(void)
 	return 0;
 #else
 	/* let host know DSP boot is complete */
-	return platform_boot_complete(0);
+	int res = platform_boot_complete(0);
+
+#if CONFIG_SOF_BOOT_TEST
+	ztest_run_test_suite(sof_boot, false, 1, 1);
+#endif
+
+	return res;
 #endif /* CONFIG_IMX93_A55 */
 }
 

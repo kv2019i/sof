@@ -38,11 +38,6 @@
 #include <sof/trace/dma-trace.h>
 #include <sof/lib_manager.h>
 
-#if CONFIG_SOF_BOOT_TEST
-/* CONFIG_SOF_BOOT_TEST depends on Zephyr */
-#include <zephyr/ztest.h>
-#endif
-
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -1539,14 +1534,4 @@ void ipc_cmd(struct ipc_cmd_hdr *_hdr)
 
 		ipc4_send_reply(&reply);
 	}
-
-#if CONFIG_SOF_BOOT_TEST
-	/*
-	 * When the first FW_GEN IPC has been processed we are in a stable
-	 * running state, now if a test causes an exception, we have a good
-	 * chance of capturing it.
-	 */
-	if (target == SOF_IPC4_MESSAGE_TARGET_FW_GEN_MSG)
-		TEST_RUN_ONCE(ztest_run_test_suite, sof_boot);
-#endif
 }
