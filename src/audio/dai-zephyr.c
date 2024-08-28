@@ -379,11 +379,19 @@ dai_dma_cb(struct dai_data *dd, struct comp_dev *dev, uint32_t bytes,
 				audio_stream_frame_bytes(&source_c->stream),
 			 audio_stream_get_free_samples(&sink_c->stream) *
 				audio_stream_frame_bytes(&sink_c->stream));
-	} else {
+	}
+#if 0
+	else {
+
 		/* update host position (in bytes offset) for drivers */
+		if (dd->total_data_processed < 2000) {
+			comp_warn(dev, "total_data_processed %llu->%llu",
+				dd->total_data_processed,
+				dd->total_data_processed + bytes);
+		}
 		dd->total_data_processed += bytes;
 	}
-
+#endif
 	return dma_status;
 }
 
@@ -442,9 +450,11 @@ dai_dma_multi_endpoint_cb(struct dai_data *dd, struct comp_dev *dev, uint32_t fr
 		audio_stream_consume(&dd->dma_buffer->stream, bytes);
 	}
 
+#if 0
 	/* update host position (in bytes offset) for drivers */
 	dd->total_data_processed += bytes;
-
+#endif
+	
 	return dma_status;
 }
 
@@ -1505,6 +1515,12 @@ int dai_zephyr_multi_endpoint_copy(struct dai_data **dd, struct comp_dev *dev,
 		}
 
 		dai_dma_position_update(dd[i], dev);
+		if (dd[i]->total_data_processed < 2000) {
+			comp_warn(dev, "total_data_processed %llu->%llu",
+				dd[i]->total_data_processed,
+				dd[i]->total_data_processed + copy_bytes);
+		}
+		dd[i]->total_data_processed += copy_bytes;
 	}
 
 	frame_bytes = audio_stream_frame_bytes(&multi_endpoint_buffer->stream);
@@ -1701,6 +1717,12 @@ int dai_common_copy(struct dai_data *dd, struct comp_dev *dev, pcm_converter_fun
 	}
 
 	dai_dma_position_update(dd, dev);
+	if (dd->total_data_processed < 2000) {
+		comp_warn(dev, "total_data_processed %llu->%llu",
+			dd->total_data_processed,
+			dd->total_data_processed + copy_bytes);
+	}
+	dd->total_data_processed += copy_bytes;
 
 	return ret;
 }

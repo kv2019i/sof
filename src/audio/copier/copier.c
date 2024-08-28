@@ -391,6 +391,8 @@ static int copier_comp_trigger(struct comp_dev *dev, int cmd)
 		buffer = list_first_item(&dai_copier->bsource_list, struct comp_buffer, sink_list);
 		pipe_reg.stream_start_offset = posn.dai_posn +
 			latency * audio_stream_period_bytes(&buffer->stream, dev->frames);
+		comp_warn(dev, "start dai_posn %llu latency %u offset %llu",
+			posn.dai_posn, latency, pipe_reg.stream_start_offset);
 		pipe_reg.stream_end_offset = 0;
 		mailbox_sw_regs_write(cd->pipeline_reg_offset, &pipe_reg, sizeof(pipe_reg));
 	} else if (cmd == COMP_TRIGGER_PAUSE) {

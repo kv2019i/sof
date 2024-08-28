@@ -521,6 +521,9 @@ struct comp_dev *pipeline_get_dai_comp_latency(uint32_t pipeline_id, uint32_t *l
 			*latency += input_data / input_base_cfg.ibs -
 				output_data / output_base_cfg.obs;
 
+		printk("latency: input %u output %u ibs %d obs %d latency %u\n",
+			input_data, output_data, input_base_cfg.ibs, output_base_cfg.obs, *latency);
+
 		/* If the component doesn't have a sink buffer, it can be a dai. */
 		if (list_is_empty(&ipc_sink->cd->bsink_list))
 			return dev_comp_type(ipc_sink->cd) == SOF_COMP_DAI ? ipc_sink->cd : NULL;
