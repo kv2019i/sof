@@ -554,4 +554,113 @@ struct comp_dev *pipeline_get_dai_comp_latency(uint32_t pipeline_id, uint32_t *l
 }
 EXPORT_SYMBOL(pipeline_get_dai_comp_latency);
 
+__cold static int pipeline_ep_register(struct comp_dev *current)
+{
+	struct ipc *ipc = ipc_get();
+
+	/* add new component to the list */
+	list_item_append(&current->ep_list, &ipc->ep_comp_list);
+
+	comp_info(current, "Host component registered");
+}
+
+__cold int pipeline_ep_unregister(struct comp_dev *current)
+{
+	list_item_del(&current->ep_list);
+}
+
+__cold int pipeline_host_register(struct comp_dev *current)
+{
+	return pipeline_ep_register(current);
+}
+
+__cold int pipeline_host_unregister(struct comp_dev *current)
+{
+	return pipeline_ep_unregister(current);
+}
+
+__cold int pipeline_dai_register(struct comp_dev *current)
+{
+	return pipeline_ep_register(current);
+}
+
+__cold int pipeline_dai_unregister(struct comp_dev *current)
+{
+	return pipeline_ep_unregister(current);
+}
+
+/*
+ * Triggers hardware interfaces to fill endpoint buffers
+ * before DSP pipeline tasks are run for the LL cycle
+ */
+int pipeline_graph_ll_start(void)
+{
+	struct ipc *ipc = ipc_get();
+	struct list_item *clist;
+	struct comp_dev *comp;
+	int err;
+
+
+	list_for_item(clist, &ipc->ep_comp_list) {
+		comp = container_of(clist, struct comp_dev, ep_list);
+
+		if (!comp_is_active(comp))
+			continue;
+
+		if (comp->direction == SOF_IPC_STREAM_PLAYBACK &&
+		    comp_get_endpoint_type(comp) == COMP_ENDPOINT_HOST) {
+
+			comp_dbg(comp, "LL start: PLAY endpoint dir %d type %d",
+				comp->direction,
+				comp_get_endpoint_type(comp));
+			err = comp_copy(comp);
+		} else if (comp->direction == SOF_IPC_STREAM_CAPTURE &&
+			   comp_get_endpoint_type(comp) == COMP_ENDPOINT_DAI) {
+
+			comp_dbg(comp, "LL start: CAPTURE endpoint dir %d type %d",
+				comp->direction,
+				comp_get_endpoint_type(comp));
+			err = comp_copy(comp);
+		}
+	}
+	return 0;
+}
+
+/*
+ * Flush data from graph endpoints to hardware after DSP low-latency
+ * tasks have completed.
+ */
+int pipeline_graph_ll_end(void)
+{
+	struct ipc *ipc = ipc_get();
+	struct list_item *clist;
+	struct comp_dev *comp;
+	int err;
+
+	list_for_item(clist, &ipc->ep_comp_list) {
+		comp = container_of(clist, struct comp_dev, ep_list);
+
+		if (!comp_is_active(comp))
+			continue;
+
+		if (comp->direction == SOF_IPC_STREAM_PLAYBACK &&
+		    comp_get_endpoint_type(comp) == COMP_ENDPOINT_DAI) {
+
+			comp_dbg(comp, "LL end: PLAY endpoint dir %d type %d",
+				comp->direction,
+				comp_get_endpoint_type(comp));
+			err = comp_copy(comp);
+		} else if (comp->direction == SOF_IPC_STREAM_CAPTURE &&
+			   comp_get_endpoint_type(comp) == COMP_ENDPOINT_HOST) {
+
+			comp_dbg(comp, "LL end: CAPTURE endpoint dir %d type %d",
+				comp->direction,
+				comp_get_endpoint_type(comp));
+			err = comp_copy(comp);
+		}
+	}
+
+	return 0;
+}
+
 #endif

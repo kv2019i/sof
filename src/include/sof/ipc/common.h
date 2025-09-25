@@ -67,6 +67,8 @@ struct ipc {
 
 	struct list_item comp_list;	/* list of component devices */
 
+	struct list_item ep_comp_list;  /* list of endpoint component devices */
+
 	/* processing task */
 #if CONFIG_TWB_IPC_TASK
 	struct task *ipc_task;

@@ -679,6 +679,8 @@ struct comp_dev {
 	struct list_item bsource_list;	/**< list of source buffers */
 	struct list_item bsink_list;	/**< list of sink buffers */
 
+	struct list_item ep_list;	/**< grouping of endpoint components */
+
 	/* performance data*/
 	struct comp_perf_data perf_data;
 	/* Input Buffer Size for pin 0, add array for other pins if needed */

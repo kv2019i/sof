@@ -309,6 +309,7 @@ __cold int ipc_init(struct sof *sof)
 	k_spinlock_init(&sof->ipc->lock);
 	list_init(&sof->ipc->msg_list);
 	list_init(&sof->ipc->comp_list);
+	list_init(&sof->ipc->ep_comp_list);
 
 #ifdef CONFIG_SOF_TELEMETRY_IO_PERFORMANCE_MEASUREMENTS
 	struct io_perf_data_item init_data = {IO_PERF_IPC_ID,

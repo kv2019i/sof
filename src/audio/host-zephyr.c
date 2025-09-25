@@ -705,6 +705,7 @@ __cold int host_common_new(struct host_data *hd, struct comp_dev *dev,
 			   const struct ipc_config_host *ipc_host, uint32_t config_id)
 {
 	uint32_t dir;
+	int ret;
 
 	assert_can_be_cold();
 
@@ -712,6 +713,10 @@ __cold int host_common_new(struct host_data *hd, struct comp_dev *dev,
 	/* request HDA DMA with shared access privilege */
 	dir = hd->ipc_host.direction == SOF_IPC_STREAM_PLAYBACK ?
 		SOF_DMA_DIR_HMEM_TO_LMEM : SOF_DMA_DIR_LMEM_TO_HMEM;
+
+	ret = pipeline_host_register(dev);
+	if (ret < 0)
+		return ret;
 
 	hd->dma = sof_dma_get(dir, 0, SOF_DMA_DEV_HOST, SOF_DMA_ACCESS_SHARED);
 	if (!hd->dma) {
@@ -735,7 +740,8 @@ __cold int host_common_new(struct host_data *hd, struct comp_dev *dev,
 	hd->chan = NULL;
 	hd->copy_type = COMP_COPY_NORMAL;
 
-	return 0;
+
+	return ret;
 }
 
 __cold static struct comp_dev *host_new(const struct comp_driver *drv,
@@ -795,6 +801,9 @@ __cold static void host_free(struct comp_dev *dev)
 	assert_can_be_cold();
 
 	comp_dbg(dev, "host_free()");
+
+	pipeline_host_unregister(dev);
+
 	host_common_free(hd);
 	rfree(hd);
 	rfree(dev);

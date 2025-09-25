@@ -480,8 +480,13 @@ __cold int dai_common_new(struct dai_data *dd, struct comp_dev *dev,
 			  const struct ipc_config_dai *dai_cfg)
 {
 	uint32_t dir;
+	int ret;
 
 	assert_can_be_cold();
+
+	ret = pipeline_dai_register(dev);
+	if (ret < 0)
+		return ret;
 
 	dd->dai = dai_get(dai_cfg->type, dai_cfg->dai_index, DAI_CREAT);
 	if (!dd->dai) {
@@ -628,6 +633,8 @@ __cold static void dai_free(struct comp_dev *dev)
 
 	if (dd->group)
 		notifier_unregister(dev, dd->group, NOTIFIER_ID_DAI_TRIGGER);
+
+	pipeline_dai_unregister(dev);
 
 	dai_common_free(dd);
 

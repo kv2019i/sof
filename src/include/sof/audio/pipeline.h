@@ -439,4 +439,13 @@ int pipeline_xrun_set_limit(struct pipeline *p, uint32_t xrun_limit_usecs);
  */
 void pipeline_comp_copy_error_notify(const struct comp_dev *component, int error_code);
 
+int pipeline_host_register(struct comp_dev *current);
+int pipeline_host_unregister(struct comp_dev *current);
+
+int pipeline_dai_register(struct comp_dev *current);
+int pipeline_dai_unregister(struct comp_dev *current);
+
+int pipeline_graph_ll_start(void);
+int pipeline_graph_ll_end(void);
+
 #endif /* __SOF_AUDIO_PIPELINE_H__ */

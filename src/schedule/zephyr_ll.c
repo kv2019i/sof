@@ -208,6 +208,8 @@ static void zephyr_ll_run(void *data)
 
 		zephyr_ll_unlock(sch, &flags);
 
+		pipeline_graph_ll_start();
+
 		/*
 		 * task's .run() should only return either
 		 * SOF_TASK_STATE_COMPLETED or SOF_TASK_STATE_RESCHEDULE
@@ -220,6 +222,8 @@ static void zephyr_ll_run(void *data)
 			       state);
 			state = SOF_TASK_STATE_RESCHEDULE;
 		}
+
+		pipeline_graph_ll_end();
 
 		zephyr_ll_lock(sch, &flags);
 

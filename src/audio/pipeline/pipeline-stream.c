@@ -130,7 +130,10 @@ static int pipeline_comp_copy(struct comp_dev *current,
 	}
 
 	/* copy to downstream immediately */
-	if (dir == PPL_DIR_DOWNSTREAM) {
+	if (dir == PPL_DIR_DOWNSTREAM &&
+	    comp_get_endpoint_type(current) != COMP_ENDPOINT_DAI &&
+	    comp_get_endpoint_type(current) != COMP_ENDPOINT_HOST) {
+
 		err = comp_copy(current);
 		if (err < 0) {
 			pipeline_comp_copy_error_notify(current, err);
@@ -144,7 +147,10 @@ static int pipeline_comp_copy(struct comp_dev *current,
 	if (err < 0 || err == PPL_STATUS_PATH_STOP)
 		return err;
 
-	if (dir == PPL_DIR_UPSTREAM) {
+	if (dir == PPL_DIR_UPSTREAM &&
+	    comp_get_endpoint_type(current) != COMP_ENDPOINT_DAI &&
+	    comp_get_endpoint_type(current) != COMP_ENDPOINT_HOST) {
+
 		err = comp_copy(current);
 		if (err < 0)
 			pipeline_comp_copy_error_notify(current, err);
