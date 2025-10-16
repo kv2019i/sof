@@ -462,6 +462,7 @@ zephyr_include_directories(${SOF_PLATFORM_PATH}/${PLATFORM}/include)
 
 zephyr_library_sources_ifdef(CONFIG_USERSPACE
 	syscall/sof_local_lock.c
+	syscall/sof_dma.c
 )
 zephyr_syscall_header(${SOF_SRC_PATH}/include/sof/sof_syscall.h)
 
