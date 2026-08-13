@@ -839,6 +839,10 @@ static int heap_init(void)
 {
 	sys_heap_init(&sof_heap.heap, heapmem, HEAPMEM_SIZE - SHARED_BUFFER_HEAP_MEM_SIZE);
 
+#define DT_SRAM_SIZE  DT_REG_SIZE(DT_NODELABEL(sram0))
+	LOG_INF("Heap initialized size 0x%x (physical 0x%x)\n",
+		HEAPMEM_SIZE - SHARED_BUFFER_HEAP_MEM_SIZE, DT_SRAM_SIZE);
+
 #if CONFIG_SOF_USERSPACE_USE_SHARED_HEAP
 	shared_buffer_heap.heap.init_mem = shared_heapmem;
 	shared_buffer_heap.heap.init_bytes = SHARED_BUFFER_HEAP_MEM_SIZE;

@@ -82,6 +82,7 @@ config SOF_NATIVE_SIM_HOST_HEAP
 
 config SOF_ZEPHYR_HEAP_SIZE
 	hex "Size of the Zephyr heap for SOF"
+	default 0x200000 if SOC_ACE30 && SOF_USERSPACE_LL
 	default 0x40000 if VIRTUAL_HEAP
 	default 0xF0000 if SOC_ACE15_MTPM || SOC_ACE20_LNL
 	default 0x100000 if SOC_ACE30 || SOC_ACE40
@@ -330,7 +331,7 @@ config SOF_VREGIONS
 
 config VIRTUAL_HEAP
 	bool "Use virtual memory heap to allocate buffers"
-	default y if ACE
+	default y if ACE && !SOF_USERSPACE_LL
 	depends on ACE
 	help
 	  Enabling this option will use the virtual memory heap allocator to allocate buffers.
