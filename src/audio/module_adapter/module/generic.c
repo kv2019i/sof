@@ -40,6 +40,21 @@ LOG_MODULE_DECLARE(module_adapter, CONFIG_SOF_LOG_LEVEL);
  */
 static K_MUTEX_DEFINE(mod_res_lock);
 
+/*
+ * Configuration buffers are in the module heap: DP modules set their
+ * configuration in the DP thread, which may not use the LL user heap.
+ */
+static void *module_cfg_alloc(struct processing_module *mod, size_t size)
+{
+	return mod_alloc_ext(mod, SOF_MEM_FLAG_USER | SOF_MEM_FLAG_LARGE_BUFFER, size, 0);
+}
+
+static void module_cfg_free(struct processing_module *mod, void *ptr)
+{
+	if (ptr)
+		mod_free(mod, ptr);
+}
+
 __cold int module_load_config(struct comp_dev *dev, const void *cfg, size_t size)
 {
 	int ret;
@@ -62,15 +77,13 @@ __cold int module_load_config(struct comp_dev *dev, const void *cfg, size_t size
 
 	if (!dst->data) {
 		/* No space for config available yet, allocate now */
-		dst->data = sof_heap_alloc(sof_sys_user_heap_get(),
-					   SOF_MEM_FLAG_USER | SOF_MEM_FLAG_LARGE_BUFFER, size, 0);
+		dst->data = module_cfg_alloc(mod, size);
 	} else if (dst->size != size) {
 		/* The size allocated for previous config doesn't match the new one.
 		 * Free old container and allocate new one.
 		 */
-		sof_heap_free(sof_sys_user_heap_get(), dst->data);
-		dst->data = sof_heap_alloc(sof_sys_user_heap_get(),
-					   SOF_MEM_FLAG_USER | SOF_MEM_FLAG_LARGE_BUFFER, size, 0);
+		module_cfg_free(mod, dst->data);
+		dst->data = module_cfg_alloc(mod, size);
 	}
 	if (!dst->data) {
 		comp_err(dev, "failed to allocate space for setup config.");
@@ -671,7 +684,7 @@ int module_prepare(struct processing_module *mod,
 	 * as it has been applied during the procedure - it is safe to
 	 * free it.
 	 */
-	sof_heap_free(sof_sys_user_heap_get(), md->cfg.data);
+	module_cfg_free(mod, md->cfg.data);
 
 	md->cfg.avail = false;
 	md->cfg.data = NULL;
@@ -761,7 +774,7 @@ int module_reset(struct processing_module *mod)
 
 	md->cfg.avail = false;
 	md->cfg.size = 0;
-	sof_heap_free(sof_sys_user_heap_get(), md->cfg.data);
+	module_cfg_free(mod, md->cfg.data);
 	md->cfg.data = NULL;
 
 #if CONFIG_IPC_MAJOR_3
@@ -829,10 +842,10 @@ __cold int module_free(struct processing_module *mod)
 	/* Free all memory shared by module_adapter & module */
 	md->cfg.avail = false;
 	md->cfg.size = 0;
-	sof_heap_free(sof_sys_user_heap_get(), md->cfg.data);
+	module_cfg_free(mod, md->cfg.data);
 	md->cfg.data = NULL;
 	if (md->runtime_params) {
-		sof_heap_free(sof_sys_user_heap_get(), md->runtime_params);
+		module_cfg_free(mod, md->runtime_params);
 		md->runtime_params = NULL;
 	}
 #if CONFIG_IPC_MAJOR_3
@@ -900,9 +913,7 @@ __cold int module_set_configuration(struct processing_module *mod,
 		}
 
 		/* Allocate buffer for new params */
-		md->runtime_params = sof_heap_alloc(sof_sys_user_heap_get(),
-						    SOF_MEM_FLAG_USER | SOF_MEM_FLAG_LARGE_BUFFER,
-						    data_offset_size, 0);
+		md->runtime_params = module_cfg_alloc(mod, data_offset_size);
 		if (!md->runtime_params) {
 			comp_err(dev, "space allocation for new params failed");
 			return -ENOMEM;
@@ -950,8 +961,7 @@ __cold int module_set_configuration(struct processing_module *mod,
 
 	md->new_cfg_size = 0;
 
-	if (md->runtime_params)
-		sof_heap_free(sof_sys_user_heap_get(), md->runtime_params);
+	module_cfg_free(mod, md->runtime_params);
 	md->runtime_params = NULL;
 
 	return ret;
