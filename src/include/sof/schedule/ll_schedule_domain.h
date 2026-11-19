@@ -262,6 +262,18 @@ void zephyr_ll_user_heap_free(void *ptr);
  */
 void zephyr_ll_user_heap_stats_get(struct zephyr_ll_user_heap_stats *stats);
 
+#if CONFIG_SOF_BOOT_TEST_STANDALONE
+struct sys_heap;
+struct sys_mutex;
+
+/**
+ * @brief Get the allocator state of the LL user heap, for tests.
+ * @param[out] heap The heap, in LL memory.
+ * @param[out] lock The heap lock, in LL memory.
+ */
+void zephyr_ll_user_heap_test_get(struct sys_heap **heap, struct sys_mutex **lock);
+#endif
+
 /**
  * @brief Get the size of the LL user heap memory.
  * @return Size in bytes.
