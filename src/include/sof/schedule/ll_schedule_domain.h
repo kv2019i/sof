@@ -215,12 +215,75 @@ struct task *zephyr_ll_task_alloc(void);
  */
 struct k_heap *zephyr_ll_user_heap(void);
 
+/** @brief Usage counters of the LL user heap */
+struct zephyr_ll_user_heap_stats {
+	size_t allocated_bytes;		/**< bytes allocated now */
+	size_t max_allocated_bytes;	/**< most bytes allocated at a time */
+	uint32_t fail_count;		/**< failed allocations */
+};
+
+/**
+ * @brief Initialise the LL user heap allocator on its memory.
+ *
+ * Kernel context only, called once at boot.
+ * @param[in] mem Start of the heap memory, uncached alias.
+ * @param[in] bytes Size of the heap memory.
+ */
+void zephyr_ll_user_heap_init(void *mem, size_t bytes);
+
+/**
+ * @brief Allocate from the LL user heap.
+ *
+ * Runs the heap allocator in the calling context. User threads of the LL
+ * memory domain call it directly, kernel code must not use it, since the
+ * heap metadata is user-writable.
+ * @param[in] flags SOF_MEM_FLAG_COHERENT for an uncached pointer.
+ * @param[in] bytes Size in bytes.
+ * @param[in] alignment Required alignment in bytes, 0 for the cache line size.
+ * @return Pointer to the memory, or NULL on failure.
+ */
+void *zephyr_ll_user_heap_alloc(uint32_t flags, size_t bytes, size_t alignment);
+
+/**
+ * @brief Free memory allocated with zephyr_ll_user_heap_alloc().
+ *
+ * Same context rules as zephyr_ll_user_heap_alloc(). Faults the calling
+ * thread if @p ptr is not in the heap.
+ * @param[in] ptr Memory to free, cached or uncached alias, or NULL.
+ */
+void zephyr_ll_user_heap_free(void *ptr);
+
+/**
+ * @brief Copy the usage counters of the LL user heap.
+ *
+ * The counters are in user-writable memory, so treat them as untrusted
+ * numbers. Callable from any context.
+ * @param[out] stats The counters.
+ */
+void zephyr_ll_user_heap_stats_get(struct zephyr_ll_user_heap_stats *stats);
+
 /**
  * @brief Verify that a pointer belongs to the user-space LL heap.
  * @param[in] heap Heap handle to check.
  * @return true if valid, false otherwise.
  */
 bool zephyr_ll_user_heap_verify(struct k_heap *heap);
+
+/**
+ * @brief Get the size of the LL user heap memory.
+ * @return Size in bytes.
+ */
+size_t zephyr_ll_user_heap_size(void);
+
+/**
+ * @brief Check that memory lies in the LL user heap.
+ *
+ * Uses the kernel copy of the heap bounds. Kernel context only.
+ * @param[in] ptr Start of the memory, cached or uncached alias.
+ * @param[in] bytes Size in bytes.
+ * @return true if [ptr, ptr + bytes) lies in the heap.
+ */
+bool zephyr_ll_user_heap_contains(const void *ptr, size_t bytes);
 
 /**
  * @brief Initialize user-space memory partitions and access permissions for LL scheduling.
